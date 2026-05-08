@@ -12,7 +12,7 @@ router = APIRouter(prefix="/api/v1", tags=["signals"])
 
 @router.post("/signals", status_code=status.HTTP_202_ACCEPTED)
 @limiter.limit(settings.rate_limit_per_ip)
-@limiter.limit(settings.rate_limit_global, key_func=lambda: "global")
+@limiter.limit(settings.rate_limit_global, key_func=lambda _request: "global")
 async def ingest_signal(request: Request, signal: SignalIn) -> dict:
     producer = kafka_db.get_producer()
     payload = signal.model_dump(mode="json")

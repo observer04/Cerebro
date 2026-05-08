@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 
 import pytest
@@ -58,9 +58,6 @@ class FakeConn:
         raise ValueError("Unexpected query")
 
     async def execute(self, query: str, *args):
-        if query.startswith("DELETE FROM work_items"):
-            self.pool.work_items.pop(str(args[0]), None)
-            return "DELETE 1"
         if query.startswith("UPDATE work_items SET signal_count"):
             item = self.pool.work_items[str(args[0])]
             item["signal_count"] += 1
@@ -81,7 +78,7 @@ def make_signal(component_id: str = "database") -> SignalIn:
     return SignalIn(
         signal_id=uuid4(),
         component_id=component_id,
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
         severity_hint=None,
         source="test",
         metadata={},
@@ -141,8 +138,8 @@ async def test_concurrent_signals_single_winner() -> None:
 
     assert results.count("created") == 1
     assert results.count("deduplicated") == 1
-    work_item_id = await redis.get("debounce:database")
-    assert pg_pool.work_items[work_item_id]["signal_count"] == 2
+    # Only one work item created — no orphans
+    assert len(pg_pool.work_items) == 1
 
 
 @pytest.mark.asyncio

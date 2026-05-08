@@ -56,13 +56,13 @@ async def _event_generator(request: Request) -> AsyncIterator[str]:
                 if isinstance(payload, bytes):
                     payload = payload.decode("utf-8")
                 yield f"data: {payload}\n\n"
+                last_keepalive = time.monotonic()
+                continue
 
             now = time.monotonic()
             if now - last_keepalive >= 15:
                 yield ": keep-alive\n\n"
                 last_keepalive = now
-
-            await asyncio.sleep(0)
     finally:
         await pubsub.unsubscribe("incidents")
         await pubsub.close()

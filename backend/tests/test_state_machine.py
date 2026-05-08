@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import pytest
@@ -16,7 +16,7 @@ from app.core.state_machine import (
 
 
 def make_work_item(status: str = "OPEN", assignee: str | None = None) -> WorkItem:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     return WorkItem(
         id=uuid4(),
         component_id="database",
@@ -78,9 +78,11 @@ def test_resolved_to_closed_without_rca_raises() -> None:
 
 
 def test_resolved_to_closed_with_rca_sets_mttr() -> None:
-    created_at = datetime.utcnow() - timedelta(hours=2)
+    created_at = datetime.now(timezone.utc) - timedelta(hours=2)
+    resolved_at = created_at + timedelta(hours=1)
     work_item = make_work_item(status="RESOLVED")
     work_item.created_at = created_at
+    work_item.resolved_at = resolved_at
     machine = WorkItemStateMachine(work_item)
 
     rca = RCARecord(
@@ -88,7 +90,7 @@ def test_resolved_to_closed_with_rca_sets_mttr() -> None:
         mitigation="Restarted service and raised pool size",
         prevention="Add pool monitoring alert",
         submitted_by="oncall@corp.com",
-        submitted_at=created_at + timedelta(hours=1),
+        submitted_at=created_at + timedelta(hours=2),  # RCA submitted later — shouldn't affect MTTR
     )
 
     updated = machine.transition_to("CLOSED", rca=rca)

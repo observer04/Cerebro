@@ -28,7 +28,11 @@ async def throughput_logger(app: FastAPI) -> None:
     lock_key = settings.throughput_lock_key
     lock_ttl = max(int(window) + 1, 2)
     while not app.state.stop_event.is_set():
-        await asyncio.sleep(window)
+        try:
+            await asyncio.wait_for(app.state.stop_event.wait(), timeout=window)
+            break  # stop_event was set during the wait
+        except asyncio.TimeoutError:
+            pass  # normal: window elapsed, compute metrics
         try:
             redis = redis_client.get_client()
             lock_token = str(uuid.uuid4())

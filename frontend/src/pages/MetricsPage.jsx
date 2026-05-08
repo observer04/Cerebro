@@ -16,20 +16,28 @@ export default function MetricsPage({ connected }) {
 
   useEffect(() => {
     let active = true;
-    api.getDashboardMetrics()
-      .then((data) => {
-        if (active) {
-          setMetrics(Array.isArray(data) ? data : []);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setMetrics([]);
-        }
-      });
+
+    const fetchMetrics = () => {
+      api
+        .getDashboardMetrics()
+        .then((data) => {
+          if (active) {
+            setMetrics(Array.isArray(data) ? data : []);
+          }
+        })
+        .catch(() => {
+          if (active) {
+            setMetrics([]);
+          }
+        });
+    };
+
+    fetchMetrics();
+    const interval = setInterval(fetchMetrics, 10000);
 
     return () => {
       active = false;
+      clearInterval(interval);
     };
   }, []);
 

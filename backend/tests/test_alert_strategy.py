@@ -23,9 +23,9 @@ def test_p1_component_selects_slack_urgent() -> None:
     assert isinstance(strategy, SlackUrgentAlertStrategy)
 
 
-def test_unknown_component_raises_key_error() -> None:
-    with pytest.raises(KeyError):
-        alert_strategy.get_strategy_for_component("unknown")
+def test_unknown_component_defaults_to_log_only() -> None:
+    strategy = alert_strategy.get_strategy_for_component("unknown")
+    assert isinstance(strategy, LogOnlyAlertStrategy)
 
 
 @pytest.mark.asyncio

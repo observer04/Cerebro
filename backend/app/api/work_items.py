@@ -46,9 +46,11 @@ async def list_work_items(
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
 
+    limit_idx = len(values) + 1
+    offset_idx = len(values) + 2
     values.append(page_size)
     values.append(offset)
-    query += f" ORDER BY created_at DESC LIMIT ${len(values) - 1} OFFSET ${len(values)}"
+    query += f" ORDER BY created_at DESC LIMIT ${limit_idx} OFFSET ${offset_idx}"
 
     async with postgres.acquire() as conn:
         rows = await conn.fetch(query, *values)

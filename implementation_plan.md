@@ -265,13 +265,13 @@ Each client module exports:
 
 ### Acceptance criteria
 
-- [ ] `pytest backend/tests/test_backpressure.py` passes with 4+ tests:
+- [x] `pytest backend/tests/test_backpressure.py` passes with 4+ tests:
   - Succeeds on first try → returns result, no delay
   - Fails twice then succeeds → retries with increasing delay
   - Fails all 5 attempts → calls on_failure callback, raises
   - Jitter is applied (delay is not exactly `2^n * base`)
-- [ ] Each db module is importable and has `init_pool`, `close_pool`
-- [ ] `backend/app/db/__init__.py` exists
+- [x] Each db module is importable and has `init_pool`, `close_pool`
+- [x] `backend/app/db/__init__.py` exists
 
 ### Git commit
 

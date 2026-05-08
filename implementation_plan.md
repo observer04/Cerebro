@@ -190,7 +190,7 @@ class RCAIn(BaseModel):
 
 ### Acceptance criteria
 
-- [ ] `pytest backend/tests/test_state_machine.py` passes with 8+ tests:
+- [x] `pytest backend/tests/test_state_machine.py` passes with 8+ tests:
   - OPEN → INVESTIGATING succeeds
   - OPEN → CLOSED raises InvalidTransitionError
   - INVESTIGATING → RESOLVED succeeds
@@ -199,18 +199,18 @@ class RCAIn(BaseModel):
   - RESOLVED → CLOSED with valid RCA succeeds and computes mttr_seconds
   - RESOLVED → INVESTIGATING (re-investigate) succeeds
   - CLOSED → anything raises InvalidTransitionError (terminal)
-- [ ] `pytest backend/tests/test_alert_strategy.py` passes with 4+ tests:
+- [x] `pytest backend/tests/test_alert_strategy.py` passes with 4+ tests:
   - P0 component selects PagerDutyAlertStrategy
   - P1 component selects SlackUrgentAlertStrategy
   - Unknown component raises KeyError or uses fallback
   - execute_alert calls strategy.execute exactly once
-- [ ] `pytest backend/tests/test_rca_validation.py` passes with 4+ tests:
+- [x] `pytest backend/tests/test_rca_validation.py` passes with 4+ tests:
   - RCAIn with root_cause < 20 chars rejected
   - RCAIn with empty mitigation rejected
   - RCAIn with invalid email rejected
   - Valid RCAIn accepted
-- [ ] All models importable: `from app.models.signal import SignalIn` etc.
-- [ ] `from app.config import settings` works with env vars
+- [x] All models importable: `from app.models.signal import SignalIn` etc.
+- [x] `from app.config import settings` works with env vars
 
 ### Git commit
 

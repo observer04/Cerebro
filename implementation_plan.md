@@ -397,15 +397,15 @@ All tests in `test_debounce.py` must pass.
 
 ### Acceptance criteria
 
-- [ ] `curl -X POST http://localhost:8000/api/v1/signals -H 'Content-Type: application/json' -d '{"component_id":"database","source":"test"}'` returns 202
-- [ ] 11th request from same IP within 1 second returns 429 (test rate limit per-IP at 1000)
-- [ ] `GET /api/v1/work-items` returns paginated list (default page_size=20)
-- [ ] `PATCH .../transition` with invalid transition returns 409 with `allowed_transitions`
-- [ ] `POST .../rca` with root_cause < 20 chars returns 422
-- [ ] `POST .../rca` on a RESOLVED work item succeeds, returns 201, mttr_seconds is set
-- [ ] `GET /health` returns JSON with all 4 component statuses
-- [ ] Console logs `[THROUGHPUT]` every 5 seconds
-- [ ] `pytest backend/tests/test_api_integration.py` passes with 6+ tests
+- [x] `curl -X POST http://localhost:8000/api/v1/signals -H 'Content-Type: application/json' -d '{"component_id":"database","source":"test"}'` returns 202
+- [x] 11th request from same IP within 1 second returns 429 (test rate limit per-IP at 1000)
+- [x] `GET /api/v1/work-items` returns paginated list (default page_size=20)
+- [x] `PATCH .../transition` with invalid transition returns 409 with `allowed_transitions`
+- [x] `POST .../rca` with root_cause < 20 chars returns 422
+- [x] `POST .../rca` on a RESOLVED work item succeeds, returns 201, mttr_seconds is set
+- [x] `GET /health` returns JSON with all 4 component statuses
+- [x] Console logs `[THROUGHPUT]` every 5 seconds
+- [x] `pytest backend/tests/test_api_integration.py` passes with 6+ tests
 
 ### Git commit
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import UUID
 
@@ -107,7 +107,7 @@ class ResolvedState(IncidentState):
         return ["CLOSED", "INVESTIGATING"]
 
     def on_enter(self, work_item: WorkItem) -> None:
-        work_item.resolved_at = datetime.utcnow()
+        work_item.resolved_at = datetime.now(timezone.utc)
 
 
 class ClosedState(IncidentState):
@@ -151,7 +151,7 @@ class WorkItemStateMachine:
         new_state = STATE_MAP[target_status]()
         new_state.on_enter(self.work_item)
         self.work_item.status = target_status
-        self.work_item.updated_at = datetime.utcnow()
+        self.work_item.updated_at = datetime.now(timezone.utc)
         self.state = new_state
         return self.work_item
 

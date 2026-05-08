@@ -15,6 +15,13 @@ class Settings(BaseSettings):
     kafka_bootstrap_servers: str = Field(
         default="localhost:9092", alias="KAFKA_BOOTSTRAP_SERVERS"
     )
+    rate_limit_global: str = Field(
+        default="10000/second", alias="RATE_LIMIT_GLOBAL"
+    )
+    rate_limit_per_ip: str = Field(default="1000/second", alias="RATE_LIMIT_PER_IP")
+    throughput_window_seconds: int = Field(
+        default=5, alias="THROUGHPUT_WINDOW_SECONDS"
+    )
 
     model_config = SettingsConfigDict(env_prefix="", populate_by_name=True)
 

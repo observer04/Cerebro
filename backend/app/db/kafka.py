@@ -22,6 +22,14 @@ async def close_producer() -> None:
         _producer = None
 
 
+async def init_pool() -> None:
+    await init_producer()
+
+
+async def close_pool() -> None:
+    await close_producer()
+
+
 def get_producer() -> AIOKafkaProducer:
     if _producer is None:
         raise RuntimeError("Kafka producer not initialized")

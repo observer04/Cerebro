@@ -21,13 +21,19 @@ class TransitionIn(BaseModel):
     assignee: str | None = None
 
 
-@router.get("/work-items", response_model=List[WorkItemOut])
+@router.get(
+    "/work-items",
+    response_model=List[WorkItemOut],
+    summary="List work items",
+    description="Paginated list of deduplicated incidents. Filter by `status` (OPEN/INVESTIGATING/RESOLVED/CLOSED) and/or `severity` (P0–P3).",
+)
 async def list_work_items(
     status: str | None = None,
     severity: str | None = None,
     page: int = 1,
     page_size: int = 20,
 ) -> List[WorkItemOut]:
+    """Query work items with optional status/severity filters and pagination."""
     page = max(page, 1)
     page_size = min(max(page_size, 1), 100)
     offset = (page - 1) * page_size
@@ -58,8 +64,14 @@ async def list_work_items(
     return [row_to_out(row) for row in rows]
 
 
-@router.get("/work-items/{work_item_id}", response_model=WorkItemOut)
+@router.get(
+    "/work-items/{work_item_id}",
+    response_model=WorkItemOut,
+    summary="Get a single work item",
+    responses={404: {"description": "Work item not found."}},
+)
 async def get_work_item(work_item_id: UUID) -> WorkItemOut:
+    """Retrieve a single work item by UUID."""
     async with postgres.acquire() as conn:
         row = await conn.fetchrow(
             "SELECT * FROM work_items WHERE id = $1", work_item_id
@@ -71,8 +83,24 @@ async def get_work_item(work_item_id: UUID) -> WorkItemOut:
     return row_to_out(row)
 
 
-@router.patch("/work-items/{work_item_id}/transition")
+@router.patch(
+    "/work-items/{work_item_id}/transition",
+    summary="Transition work item state",
+    description=(
+        "Advance the incident through its state machine: "
+        "OPEN → INVESTIGATING → RESOLVED → CLOSED.\n\n"
+        "- INVESTIGATING requires an `assignee`.\n"
+        "- CLOSED requires a prior RCA submission (use the RCA endpoint).\n"
+        "- Uses `SELECT FOR UPDATE` for race-safe concurrency."
+    ),
+    responses={
+        404: {"description": "Work item not found."},
+        409: {"description": "Invalid transition — response includes `allowed_transitions`."},
+        422: {"description": "Assignee required for INVESTIGATING."},
+    },
+)
 async def transition_work_item(work_item_id: UUID, payload: TransitionIn) -> dict:
+    """Validate and execute a state machine transition on an incident work item."""
     async with postgres.acquire() as conn:
         row = await conn.fetchrow(
             "SELECT * FROM work_items WHERE id = $1 FOR UPDATE", work_item_id

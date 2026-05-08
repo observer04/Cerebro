@@ -1,7 +1,0 @@
-1. Load test executed at 10,000 VUs on a single host (k6, API, and all data stores co-located). Under these conditions, 64.67% of requests completed successfully with zero 500 errors. All failures were TCP-level connection resets due to single-host resource contention, not application crashes. In a distributed deployment with dedicated API nodes, the rate limiter would surface 429s cleanly instead. Zero 5xx errors across 82,649 iterations demonstrates the backpressure chain is functioning correctly.
-2. Load test: constant-arrival-rate, target 2,000 req/s, 2 minutes, 1,000 max VUs
-Result: 182,308 requests, 0 failures, 0 HTTP errors, p95 < 866ms
-Effective throughput: ~1,514 req/s sustained on single-host deployment
-All thresholds passed: checks 100%, http_req_failed 0%
-
-Note: 10,000 VU ramp test also run; zero 500 errors across 138k requests. Connection resets at OS TCP limits on single host, not application failures. Distributed deployment would cleanly sustain 10k+/sec.

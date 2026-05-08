@@ -5,11 +5,10 @@ import ComponentHealthTable from "../components/ComponentHealthTable";
 import Header from "../components/Header";
 import IncidentDetail from "../components/IncidentDetail";
 import IncidentList from "../components/IncidentList";
-import MetricsBar from "../components/MetricsBar";
 import SystemHealthBar from "../components/SystemHealthBar";
 
 export default function DashboardPage({ stream }) {
-  const { incidents, metrics, connected, refreshIncidents, updateIncident } = stream;
+  const { incidents, connected, refreshIncidents, updateIncident } = stream;
   const [selectedId, setSelectedId] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -68,7 +67,6 @@ export default function DashboardPage({ stream }) {
       <Header connected={connected} />
       <main className="page">
         <SystemHealthBar />
-        <MetricsBar metrics={metrics} />
         <div className="grid">
           <IncidentList
             incidents={incidents}

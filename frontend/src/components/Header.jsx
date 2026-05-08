@@ -12,7 +12,6 @@ export default function Header({ connected }) {
           Dashboard
         </NavLink>
         <NavLink to="/metrics">Metrics</NavLink>
-        <NavLink to="/analytics">Analytics</NavLink>
         <div className="status-chip">
           <span className={connected ? "status-dot" : "status-dot offline"} />
           {connected ? "Live" : "Offline"}

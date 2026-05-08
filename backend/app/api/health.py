@@ -9,8 +9,17 @@ from app.db import mongodb, postgres, redis_client
 router = APIRouter(tags=["health"])
 
 
-@router.get("/health")
+@router.get(
+    "/health",
+    summary="Infrastructure health check",
+    description=(
+        "Probes Kafka, Redis, MongoDB, and PostgreSQL with lightweight checks "
+        "(PING, SELECT 1, metadata). Reports `healthy` or `degraded` status, "
+        "per-component latencies, real-time throughput, and uptime."
+    ),
+)
 async def health(request: Request) -> dict:
+    """Run liveness probes against all backing services and report throughput."""
     components: dict[str, dict] = {}
     degraded = False
 

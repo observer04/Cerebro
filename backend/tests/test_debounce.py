@@ -41,6 +41,18 @@ class FakeRedis:
         self._purge_expired(key)
         return self._store.get(key)
 
+    async def incr(self, key: str) -> int:
+        async with self._lock:
+            val = int(self._store.get(key, "0")) + 1
+            self._store[key] = str(val)
+            return val
+
+    async def decr(self, key: str) -> int:
+        async with self._lock:
+            val = int(self._store.get(key, "0")) - 1
+            self._store[key] = str(val)
+            return val
+
 
 class FakeConn:
     def __init__(self, pool: "FakePGPool") -> None:

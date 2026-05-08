@@ -9,7 +9,15 @@ router = APIRouter(prefix="/api/v1", tags=["system-health"])
 logger = logging.getLogger(__name__)
 
 
-@router.get("/system/health-summary")
+@router.get(
+    "/system/health-summary",
+    summary="System health snapshot",
+    description=(
+        "O(1) system health snapshot combining Redis counters and a single PostgreSQL "
+        "aggregate query. Returns active incident counts by status and severity, "
+        "average MTTR, throughput total, and active debounce windows."
+    ),
+)
 async def get_health_summary() -> dict:
     """O(1) system health snapshot using Redis counters and PostgreSQL aggregates."""
     redis = redis_client.get_client()

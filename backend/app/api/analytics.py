@@ -9,9 +9,12 @@ router = APIRouter(prefix="/api/v1", tags=["analytics"])
 logger = logging.getLogger(__name__)
 
 
-@router.get("/analytics/throughput")
+@router.get(
+    "/analytics/throughput",
+    summary="Throughput time-series",
+)
 async def get_throughput_analytics(
-    interval: str = Query(default="1 hour", regex=r"^\d+\s+(minute|hour|day)s?$"),
+    interval: str = Query(default="1 hour", pattern=r"^\d+\s+(minute|hour|day)s?$"),
     hours: int = Query(default=24, ge=1, le=168),
 ) -> dict:
     """Time-series signal throughput from TimescaleDB's time_bucket aggregation."""
@@ -52,7 +55,10 @@ async def get_throughput_analytics(
     }
 
 
-@router.get("/analytics/component-health")
+@router.get(
+    "/analytics/component-health",
+    summary="Per-component health aggregation",
+)
 async def get_component_health() -> dict:
     """Cross-store aggregation: PostgreSQL for incident counts, TimescaleDB for throughput."""
     # Active incident counts per component from PostgreSQL.

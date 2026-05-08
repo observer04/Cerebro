@@ -9,7 +9,15 @@ router = APIRouter(prefix="/api/v1", tags=["signals-query"])
 logger = logging.getLogger(__name__)
 
 
-@router.get("/work-items/{work_item_id}/signals")
+@router.get(
+    "/work-items/{work_item_id}/signals",
+    summary="Get raw signals for a work item",
+    description=(
+        "Retrieve raw signals from MongoDB linked to a specific work item. "
+        "Primary lookup uses `work_item_id` tag; falls back to `component_id` + timestamp range for legacy data."
+    ),
+    responses={404: {"description": "Work item not found."}},
+)
 async def get_work_item_signals(
     work_item_id: UUID,
     limit: int = Query(default=50, ge=1, le=200),

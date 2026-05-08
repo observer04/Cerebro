@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, UTC
 from uuid import UUID, uuid4
 
 import asyncpg
@@ -32,14 +32,20 @@ async def reset_state():
 
     redis_client = redis.from_url(settings.redis_url, decode_responses=True)
     await redis_client.flushdb()
-    await redis_client.close()
+    await redis_client.aclose()
+
+    from motor.motor_asyncio import AsyncIOMotorClient
+    mongo_client = AsyncIOMotorClient(settings.mongodb_uri)
+    db = mongo_client.get_database("ims")
+    await db.signals.delete_many({})
+    mongo_client.close()
 
     yield
 
 
 async def insert_work_item(status: str) -> UUID:
     conn = await asyncpg.connect(settings.postgres_dsn)
-    now = datetime.utcnow()
+    now = datetime.now(UTC).replace(tzinfo=None)
     resolved_at = now if status == "RESOLVED" else None
     work_item_id = uuid4()
 
@@ -156,3 +162,27 @@ async def test_health_returns_component_status(client: AsyncClient) -> None:
     assert "redis" in payload["components"]
     assert "mongodb" in payload["components"]
     assert "postgresql" in payload["components"]
+
+
+@pytest.mark.asyncio
+async def test_get_signals_for_work_item(client: AsyncClient) -> None:
+    work_item_id = await insert_work_item("OPEN")
+
+    from motor.motor_asyncio import AsyncIOMotorClient
+    mongo_client = AsyncIOMotorClient(settings.mongodb_uri)
+    db = mongo_client.get_database("ims")
+    await db.raw_signals.insert_one({
+        "work_item_id": str(work_item_id),
+        "component_id": "database",
+        "severity": "P0",
+        "source": "test",
+        "description": "test signal",
+    })
+    mongo_client.close()
+
+    response = await client.get(f"/api/v1/work-items/{work_item_id}/signals")
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload["signals"]) == 1
+    assert payload["signals"][0]["component_id"] == "database"
+

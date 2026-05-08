@@ -14,7 +14,7 @@ async def init_pool() -> None:
 async def close_pool() -> None:
     global _client
     if _client is not None:
-        await _client.close()
+        await _client.aclose()
         _client = None
 
 

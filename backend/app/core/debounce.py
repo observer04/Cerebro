@@ -32,10 +32,20 @@ async def _increment_signal_count(pg_pool: Any, work_item_id: str) -> None:
         await conn.execute(WORK_ITEM_INCREMENT, work_item_id)
 
 
+async def _decrement_debounce_count(redis_client: Any) -> None:
+    import asyncio
+    try:
+        await asyncio.sleep(10)
+        await redis_client.decr("debounce:active_count")
+    except Exception:
+        pass
+
+
 async def debounce_and_process(
     signal: SignalIn, redis_client: Any, pg_pool: Any, mongo_db: Any | None = None
 ) -> tuple[str, str]:
     from app.core.alert_strategy import COMPONENT_SEVERITY
+    import asyncio
 
     debounce_key = f"debounce:{signal.component_id}"
     severity = COMPONENT_SEVERITY.get(signal.component_id, "P3")
@@ -46,6 +56,11 @@ async def debounce_and_process(
     claimed = await redis_client.set(debounce_key, placeholder, nx=True, ex=10)
 
     if claimed:
+        # Increment active count for health dashboard
+        await redis_client.incr("debounce:active_count")
+        # Schedule decrement when the 10s window expires
+        asyncio.create_task(_decrement_debounce_count(redis_client))
+
         # Winner: create the work item, then overwrite placeholder with real ID.
         work_item_id = await _create_work_item(pg_pool, signal, severity)
         await redis_client.set(debounce_key, work_item_id, ex=10)

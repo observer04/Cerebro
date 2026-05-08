@@ -9,7 +9,15 @@ router = APIRouter(prefix="/api/v1", tags=["timeline"])
 logger = logging.getLogger(__name__)
 
 
-@router.get("/work-items/{work_item_id}/timeline")
+@router.get(
+    "/work-items/{work_item_id}/timeline",
+    summary="Incident timeline",
+    description=(
+        "Constructs a chronological event list by joining PostgreSQL work item data "
+        "(creation, transitions, resolution, closure) with MongoDB signal burst aggregations."
+    ),
+    responses={404: {"description": "Work item not found."}},
+)
 async def get_work_item_timeline(work_item_id: UUID) -> dict:
     """Construct an incident timeline by joining PostgreSQL work item data with MongoDB signal bursts."""
     # Step 1: Get work item from PostgreSQL.

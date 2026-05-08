@@ -137,6 +137,11 @@ body::before {
   gap: 1.5rem;
 }
 
+.metrics-bar--single {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 240px;
+}
+
 .metric-card {
   background: var(--card);
   padding: 1.3rem 1.5rem;
@@ -170,9 +175,10 @@ body::before {
 .incident-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.4rem;
 }
 
+/* Legacy card (kept for compatibility) */
 .incident-card {
   background: var(--card);
   border-radius: 1.1rem;
@@ -194,6 +200,53 @@ body::before {
 
 .incident-card.active {
   border-color: rgba(255, 107, 53, 0.6);
+}
+
+/* ── Compact single-line card ── */
+.incident-card-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: 0.7rem;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  animation: fadeUp 0.4s ease;
+  font-size: 0.85rem;
+}
+
+.incident-card-compact:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(22, 20, 16, 0.1);
+}
+
+.incident-card-compact.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.15);
+}
+
+.incident-card-compact .card-title {
+  flex: 1;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.incident-card-compact .card-meta {
+  color: var(--muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.incident-card-compact .card-age {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  min-width: 3rem;
+  text-align: right;
 }
 
 .badge {
@@ -322,20 +375,7 @@ body::before {
   padding: 1.5rem;
 }
 
-.chart-bars {
-  display: grid;
-  grid-auto-flow: column;
-  gap: 0.4rem;
-  align-items: end;
-  height: 160px;
-  margin-top: 1rem;
-}
 
-.chart-bar {
-  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
-  border-radius: 0.4rem 0.4rem 0 0;
-  opacity: 0.85;
-}
 
 .empty-state {
   padding: 2rem;
@@ -746,5 +786,320 @@ body::before {
 .health-table tr {
   cursor: pointer;
   transition: background 0.15s ease;
+}
+
+/* ─── Incident Filter + Sort Bar (Feature 6) ─── */
+
+.incident-list-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.incident-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: 1rem;
+  padding: 0.65rem 1rem;
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.4s ease;
+}
+
+.filter-pills {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--stroke);
+  background: var(--bg-2);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+
+.filter-pill:hover {
+  background: var(--bg-1);
+  border-color: rgba(27, 26, 23, 0.25);
+}
+
+/* "All" pill active state */
+.filter-pill.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+/* Per-severity pill colours when active */
+.filter-pill.pill-p0.active { background: var(--p0); border-color: var(--p0); color: #fff; }
+.filter-pill.pill-p1.active { background: var(--p1); border-color: var(--p1); color: #fff; }
+.filter-pill.pill-p2.active { background: var(--p2); border-color: var(--p2); color: #fff; }
+.filter-pill.pill-p3.active { background: var(--p3); border-color: var(--p3); color: #fff; }
+
+/* Subtle coloured border hint when not active */
+.filter-pill.pill-p0 { border-color: var(--p0); color: var(--p0); }
+.filter-pill.pill-p1 { border-color: var(--p1); color: var(--p1); }
+.filter-pill.pill-p2 { border-color: var(--p2); color: var(--p2); }
+.filter-pill.pill-p3 { border-color: var(--p3); color: var(--p3); }
+
+.sort-group {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.sort-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.sort-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0.28rem 2rem 0.28rem 0.65rem;
+  border-radius: 0.55rem;
+  border: 1.5px solid var(--stroke);
+  background: var(--bg-2)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6258'/%3E%3C/svg%3E")
+    no-repeat right 0.6rem center;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.sort-select:hover,
+.sort-select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+/* ─── Live Bar Graph ─── */
+
+.live-bar-label {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.live-bar-label strong {
+  font-size: 1.8rem;
+  color: var(--ink);
+  letter-spacing: -0.03em;
+}
+
+.chart-bars {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 3px;
+  align-items: end;
+  height: 140px;
+  margin-top: 0.75rem;
+}
+
+.chart-bar {
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
+  border-radius: 3px 3px 0 0;
+  opacity: 0.8;
+  min-width: 6px;
+  transition: height 0.3s ease;
+}
+
+/* ─── Analytics Grid ─── */
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+}
+
+.analytics-panel {
+  padding: 1.2rem;
+}
+
+/* Severity Distribution */
+.severity-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+}
+
+.severity-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.severity-row .badge {
+  min-width: 2.2rem;
+  justify-content: center;
+  font-size: 0.7rem;
+}
+
+.severity-track {
+  flex: 1;
+  height: 18px;
+  background: var(--bg-1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.severity-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.severity-count {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+  min-width: 2rem;
+  text-align: right;
+}
+
+/* MTTR by Component */
+.mttr-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+.mttr-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mttr-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  min-width: 5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mttr-track {
+  flex: 1;
+  height: 16px;
+  background: var(--bg-1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mttr-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent-2), var(--accent-3));
+  transition: width 0.5s ease;
+}
+
+.mttr-value {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+  min-width: 3rem;
+  text-align: right;
+}
+
+/* Incident Volume by Component */
+.volume-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+.volume-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.volume-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  min-width: 5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.volume-track {
+  flex: 1;
+  height: 16px;
+  background: var(--bg-1);
+  border-radius: 4px;
+  display: flex;
+  overflow: hidden;
+}
+
+.volume-fill {
+  height: 100%;
+  transition: width 0.5s ease;
+}
+
+.volume-active {
+  background: var(--accent);
+  border-radius: 4px 0 0 4px;
+}
+
+.volume-total {
+  background: var(--accent-2);
+  opacity: 0.5;
+}
+
+.volume-value {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+  min-width: 3.5rem;
+  text-align: right;
+}
+
+.volume-legend {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.25rem;
+}
+
+.active-dot {
+  background: var(--accent);
+}
+
+.total-dot {
+  background: var(--accent-2);
+  opacity: 0.5;
 }
 

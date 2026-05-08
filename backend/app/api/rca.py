@@ -14,8 +14,27 @@ router = APIRouter(prefix="/api/v1", tags=["rca"])
 logger = logging.getLogger(__name__)
 
 
-@router.post("/work-items/{work_item_id}/rca", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/work-items/{work_item_id}/rca",
+    status_code=status.HTTP_201_CREATED,
+    summary="Submit Root Cause Analysis",
+    description=(
+        "Submit an RCA for a RESOLVED work item. On success, the work item is "
+        "automatically transitioned to CLOSED and MTTR is calculated as "
+        "`rca.submitted_at - work_item.created_at`.\n\n"
+        "**Validation rules:**\n"
+        "- `root_cause`: min 20 characters\n"
+        "- `mitigation`, `prevention`: non-empty\n"
+        "- `submitted_by`: valid email\n"
+        "- Work item must be in RESOLVED status"
+    ),
+    responses={
+        404: {"description": "Work item not found."},
+        409: {"description": "Work item is not in RESOLVED status, or RCA validation failed."},
+    },
+)
 async def submit_rca(work_item_id: UUID, payload: RCAIn) -> dict:
+    """Insert RCA record, auto-close work item, and compute MTTR."""
     async with postgres.acquire() as conn:
         row = await conn.fetchrow(
             "SELECT * FROM work_items WHERE id = $1 FOR UPDATE", work_item_id

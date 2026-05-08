@@ -108,8 +108,74 @@ async def lifespan(app: FastAPI):
         await postgres.close_pool()
 
 
+OPENAPI_TAGS = [
+    {
+        "name": "signals",
+        "description": "**Signal Ingestion** — Accept failure signals from monitoring agents and queue them to Kafka for async processing.",
+    },
+    {
+        "name": "work-items",
+        "description": "**Incident Work Items** — CRUD and state-machine transitions for deduplicated incidents.",
+    },
+    {
+        "name": "rca",
+        "description": "**Root Cause Analysis** — Submit RCA to close incidents. Enforces min-length and completeness gates.",
+    },
+    {
+        "name": "dashboard",
+        "description": "**Dashboard & SSE** — Active incidents, metrics, and a Server-Sent Events stream for real-time updates.",
+    },
+    {
+        "name": "analytics",
+        "description": "**Analytics** — TimescaleDB-powered throughput time-series and per-component health aggregations.",
+    },
+    {
+        "name": "system-health",
+        "description": "**System Health** — O(1) snapshot of active incidents, severity breakdown, MTTR, and debounce windows.",
+    },
+    {
+        "name": "timeline",
+        "description": "**Incident Timeline** — Cross-store join of PostgreSQL work items and MongoDB signal bursts into a chronological event list.",
+    },
+    {
+        "name": "signals-query",
+        "description": "**Signal Query** — Retrieve raw signals from MongoDB linked to a specific work item.",
+    },
+    {
+        "name": "health",
+        "description": "**Infrastructure Health** — Liveness probes for Kafka, Redis, MongoDB, and PostgreSQL with throughput metrics.",
+    },
+]
+
+
 def create_app() -> FastAPI:
-    app = FastAPI(title="IMS API", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(
+        title="IMS — Incident Management System",
+        summary="Real-time failure signal ingestion, incident deduplication, and dashboard API.",
+        description=(
+            "## Overview\n\n"
+            "IMS ingests failure signals from distributed monitoring agents, deduplicates them "
+            "into incident work items using a Redis-based debounce algorithm, and serves a "
+            "real-time React dashboard via Server-Sent Events.\n\n"
+            "### Key Concepts\n\n"
+            "- **Signals** are raw failure events produced by health-checkers.\n"
+            "- **Work Items** are deduplicated incidents with a state machine "
+            "(OPEN → INVESTIGATING → RESOLVED → CLOSED).\n"
+            "- **RCA** (Root Cause Analysis) is required before closing an incident.\n"
+            "- **Backpressure** is handled at 5 layers: rate limiter → Kafka producer → "
+            "Kafka retention → MongoDB retry → PostgreSQL retry.\n\n"
+            "### Infrastructure\n\n"
+            "| Service | Purpose |\n"
+            "|---|---|\n"
+            "| Kafka | Durable signal buffer (topic: `signals`, 6 partitions) |\n"
+            "| Redis | Debounce state (`SET NX EX`), dashboard cache, SSE pub/sub |\n"
+            "| MongoDB | Raw signal archive (append-only) |\n"
+            "| PostgreSQL + TimescaleDB | Work items, RCA records, metrics hypertable |\n"
+        ),
+        version="1.0.0",
+        openapi_tags=OPENAPI_TAGS,
+        lifespan=lifespan,
+    )
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     app.add_middleware(SlowAPIMiddleware)

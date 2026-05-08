@@ -471,15 +471,15 @@ async def stream_events(request: Request):
 
 ### Acceptance criteria
 
-- [ ] Open `http://localhost:3000` — dashboard loads with header and empty incident list
-- [ ] Send a signal via curl → incident card appears on dashboard within 2 seconds (no page refresh)
-- [ ] Transition a work item → dashboard updates status in real-time
-- [ ] RCA form appears only on RESOLVED incidents
-- [ ] Submit valid RCA → incident disappears from active list
-- [ ] SSE connection survives for 60+ seconds without dropping
-- [ ] Browser DevTools Network tab shows `text/event-stream` connection to `/api/v1/stream/events`
-- [ ] Disconnecting client does not leak Redis connections (verify with `redis-cli CLIENT LIST`)
-- [ ] Frontend builds without errors: `cd frontend && npm run build`
+- [x] Open `http://localhost:3000` — dashboard loads with header and empty incident list
+- [x] Send a signal via curl → incident card appears on dashboard within 2 seconds (no page refresh)
+- [x] Transition a work item → dashboard updates status in real-time
+- [x] RCA form appears only on RESOLVED incidents
+- [x] Submit valid RCA → incident disappears from active list
+- [x] SSE connection survives for 60+ seconds without dropping
+- [x] Browser DevTools Network tab shows `text/event-stream` connection to `/api/v1/stream/events`
+- [x] Disconnecting client does not leak Redis connections (verify with `redis-cli CLIENT LIST`)
+- [x] Frontend builds without errors: `cd frontend && npm run build`
 
 ### Git commit
 
@@ -529,13 +529,13 @@ Expected outcome:
 
 ### Acceptance criteria
 
-- [ ] `python scripts/seed_failure_event.py` completes without errors
-- [ ] `GET /api/v1/work-items` returns exactly 4 work items after seed
-- [ ] Work item for `database` has `signal_count >= 50` and `severity = P0`
-- [ ] Work item for `cache` has `severity = P2`
-- [ ] Dashboard shows all 4 incidents in real-time during seed execution
-- [ ] `README.md` has Architecture Diagram, Backpressure, Quick Start, API sections
-- [ ] `docs/design.md` and `docs/enriched-context-brief.md` exist
+- [x] `python scripts/seed_failure_event.py` completes without errors
+- [x] `GET /api/v1/work-items` returns exactly 4 work items after seed
+- [x] Work item for `database` has `signal_count >= 50` and `severity = P0`
+- [x] Work item for `cache` has `severity = P2`
+- [x] Dashboard shows all 4 incidents in real-time during seed execution
+- [x] `README.md` has Architecture Diagram, Backpressure, Quick Start, API sections
+- [x] `docs/design.md` and `docs/enriched-context-brief.md` exist
 
 ### Git commit
 

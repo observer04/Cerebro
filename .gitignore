@@ -20,3 +20,8 @@ build/
 htmlcov/
 *.egg
 *.egg-info/
+k6-output/
+k6-output.txt
+results.json
+scripts/k6-results.json
+scripts/*.log

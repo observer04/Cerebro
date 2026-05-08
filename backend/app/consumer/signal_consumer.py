@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 
+from app.config import settings
 from app.core.backpressure import async_retry
 from app.core.debounce import debounce_and_process
 from app.db import kafka as kafka_db
@@ -46,6 +47,7 @@ async def run() -> None:
             try:
                 payload = json.loads(msg.value.decode("utf-8"))
                 signal = SignalIn(**payload)
+                await redis.incr(settings.throughput_counter_key)
                 await _insert_raw_signal(mongo_db, signal)
                 outcome = await debounce_and_process(signal, redis, pg_pool, mongo_db)
                 event_type = (

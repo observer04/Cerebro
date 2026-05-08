@@ -1,3 +1,5 @@
+import json
+import logging
 from datetime import datetime, timezone
 from typing import List
 from uuid import UUID
@@ -7,10 +9,11 @@ from pydantic import BaseModel, Field
 
 from app.api.utils import row_to_out, row_to_work_item
 from app.core.state_machine import AssigneeRequiredError, InvalidTransitionError, WorkItemStateMachine
-from app.db import postgres
+from app.db import postgres, redis_client
 from app.models.work_item import WorkItemOut
 
 router = APIRouter(prefix="/api/v1", tags=["work-items"])
+logger = logging.getLogger(__name__)
 
 
 class TransitionIn(BaseModel):
@@ -105,6 +108,24 @@ async def transition_work_item(work_item_id: UUID, payload: TransitionIn) -> dic
             updated.updated_at or datetime.now(timezone.utc),
             work_item_id,
         )
+
+    try:
+        redis = redis_client.get_client()
+        await redis.publish(
+            "incidents",
+            json.dumps(
+                {
+                    "type": "incident.transitioned",
+                    "data": {
+                        "id": str(work_item_id),
+                        "status": updated.status,
+                        "previous_status": previous_status,
+                    },
+                }
+            ),
+        )
+    except Exception:
+        logger.exception("Failed to publish transition event")
 
     return {
         "id": str(work_item_id),

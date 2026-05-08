@@ -26,7 +26,4 @@ async def ingest_signal(request: Request, signal: SignalIn) -> dict:
     except Exception:
         raise HTTPException(status_code=503, detail="Kafka unavailable")
 
-    async with request.app.state.counter_lock:
-        request.app.state.signal_counter += 1
-
     return {"signal_id": str(signal.signal_id), "status": "queued"}

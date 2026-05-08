@@ -119,7 +119,7 @@ class ClosedState(IncidentState):
     def on_enter(self, work_item: WorkItem) -> None:
         if not work_item.has_complete_rca():
             raise RCARequiredError()
-        mttr = work_item.rca.submitted_at - work_item.created_at
+        mttr = work_item.resolved_at - work_item.created_at
         work_item.mttr_seconds = mttr.total_seconds()
 
 

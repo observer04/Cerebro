@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 import time
+import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -22,26 +23,61 @@ logger = logging.getLogger("uvicorn.error")
 
 async def throughput_logger(app: FastAPI) -> None:
     window = app.state.throughput_window_seconds
+    counter_key = settings.throughput_counter_key
+    rate_key = settings.throughput_rate_key
+    lock_key = settings.throughput_lock_key
+    lock_ttl = max(int(window) + 1, 2)
     while not app.state.stop_event.is_set():
         await asyncio.sleep(window)
-        async with app.state.counter_lock:
-            count = app.state.signal_counter
-            app.state.signal_counter = 0
-        rate = count / window if window else 0.0
-        app.state.last_throughput = rate
-        logger.info("[THROUGHPUT] %.1f signals/sec", rate)
-
         try:
-            async with postgres.acquire() as conn:
-                await conn.execute(
-                    "INSERT INTO metrics (time, metric_name, value, labels) "
-                    "VALUES (NOW(), $1, $2, $3)",
-                    "signals_per_second",
-                    rate,
-                    json.dumps({}),
-                )
+            redis = redis_client.get_client()
+            lock_token = str(uuid.uuid4())
+            acquired = await redis.set(lock_key, lock_token, nx=True, ex=lock_ttl)
+            if not acquired:
+                continue
+
+            try:
+                raw_count = await redis.getset(counter_key, 0)
+                try:
+                    count = int(raw_count) if raw_count else 0
+                except (TypeError, ValueError):
+                    count = 0
+
+                rate = count / window if window else 0.0
+                app.state.last_throughput = rate
+                await redis.setex(rate_key, max(int(window * 2), 1), rate)
+                logger.info("[THROUGHPUT] %.1f signals/sec", rate)
+
+                try:
+                    await redis.publish(
+                        "incidents",
+                        json.dumps(
+                            {
+                                "type": "metrics.throughput",
+                                "data": {"signals_per_second": rate},
+                            }
+                        ),
+                    )
+                except Exception:
+                    logger.exception("Failed to publish throughput event")
+
+                try:
+                    async with postgres.acquire() as conn:
+                        await conn.execute(
+                            "INSERT INTO metrics (time, metric_name, value, labels) "
+                            "VALUES (NOW(), $1, $2, $3)",
+                            "signals_per_second",
+                            rate,
+                            json.dumps({}),
+                        )
+                except Exception:
+                    logger.exception("Failed to write throughput metric")
+            finally:
+                current_token = await redis.get(lock_key)
+                if current_token == lock_token:
+                    await redis.delete(lock_key)
         except Exception:
-            logger.exception("Failed to write throughput metric")
+            logger.exception("Failed to compute throughput metric")
 
 
 @asynccontextmanager
@@ -51,8 +87,6 @@ async def lifespan(app: FastAPI):
     await redis_client.init_pool()
     await kafka_db.init_producer()
 
-    app.state.signal_counter = 0
-    app.state.counter_lock = asyncio.Lock()
     app.state.last_throughput = 0.0
     app.state.throughput_window_seconds = settings.throughput_window_seconds
     app.state.start_time = time.monotonic()

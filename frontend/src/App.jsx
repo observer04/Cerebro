@@ -1,8 +1,23 @@
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+
+import { useIncidentStream } from "./hooks/useIncidentStream";
+import DashboardPage from "./pages/DashboardPage";
+import MetricsPage from "./pages/MetricsPage";
+
 export default function App() {
+  const stream = useIncidentStream();
+
   return (
-    <div style={{ fontFamily: "system-ui, sans-serif", padding: "2rem" }}>
-      <h1>IMS Dashboard</h1>
-      <p>Frontend scaffold is ready. Live data arrives in Stage 6.</p>
-    </div>
+    <BrowserRouter>
+      <div className="app-shell">
+        <Routes>
+          <Route path="/" element={<DashboardPage stream={stream} />} />
+          <Route
+            path="/metrics"
+            element={<MetricsPage connected={stream.connected} />}
+          />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 }

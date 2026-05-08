@@ -1,3 +1,5 @@
+import json
+import logging
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -5,10 +7,11 @@ from fastapi import APIRouter, HTTPException, status
 
 from app.api.utils import row_to_work_item
 from app.core.state_machine import RCARecord, RCARequiredError, WorkItemStateMachine
-from app.db import postgres
+from app.db import postgres, redis_client
 from app.models.rca import RCAIn
 
 router = APIRouter(prefix="/api/v1", tags=["rca"])
+logger = logging.getLogger(__name__)
 
 
 @router.post("/work-items/{work_item_id}/rca", status_code=status.HTTP_201_CREATED)
@@ -60,6 +63,23 @@ async def submit_rca(work_item_id: UUID, payload: RCAIn) -> dict:
             updated.updated_at,
             work_item_id,
         )
+
+    try:
+        redis = redis_client.get_client()
+        await redis.publish(
+            "incidents",
+            json.dumps(
+                {
+                    "type": "incident.closed",
+                    "data": {
+                        "id": str(work_item_id),
+                        "mttr_seconds": updated.mttr_seconds,
+                    },
+                }
+            ),
+        )
+    except Exception:
+        logger.exception("Failed to publish incident closed event")
 
     return {
         "id": str(work_item_id),

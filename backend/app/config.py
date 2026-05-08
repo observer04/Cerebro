@@ -22,6 +22,15 @@ class Settings(BaseSettings):
     throughput_window_seconds: int = Field(
         default=5, alias="THROUGHPUT_WINDOW_SECONDS"
     )
+    throughput_counter_key: str = Field(
+        default="metrics:signals_count", alias="THROUGHPUT_COUNTER_KEY"
+    )
+    throughput_rate_key: str = Field(
+        default="metrics:signals_rate", alias="THROUGHPUT_RATE_KEY"
+    )
+    throughput_lock_key: str = Field(
+        default="metrics:throughput_lock", alias="THROUGHPUT_LOCK_KEY"
+    )
 
     model_config = SettingsConfigDict(env_prefix="", populate_by_name=True)
 

@@ -41,12 +41,13 @@ COMPONENT_SEVERITY = {
     "database": "P0",
     "api_gateway": "P1",
     "cache": "P2",
+    "payment_service": "P1",
     "cdn": "P3",
 }
 
 
 def get_strategy_for_component(component_id: str) -> AlertStrategy:
-    severity = COMPONENT_SEVERITY[component_id]
+    severity = COMPONENT_SEVERITY.get(component_id, "P3")
     return ALERT_STRATEGIES[severity]
 
 

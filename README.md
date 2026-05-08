@@ -46,6 +46,9 @@ graph TB
     CW -->|"PUBLISH incidents"| SSE
     SSE -->|"EventSource<br/>auto-reconnect"| RC
     RC -->|"REST API calls"| API
+    API -.->|"Read state/metrics"| PG
+    API -.->|"Read raw signals"| MG
+    API -.->|"Read active cache"| RD
 
     style API fill:#4f46e5,color:#fff
     style KF fill:#e11d48,color:#fff
@@ -54,6 +57,8 @@ graph TB
     style PG fill:#2563eb,color:#fff
     style RC fill:#7c3aed,color:#fff
 ```
+
+> For an in-depth component breakdown, see the [**Detailed System Architecture**](#detailed-system-architecture) below.
 
 ---
 

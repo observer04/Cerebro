@@ -18,26 +18,30 @@ async def get_throughput_analytics(
     hours: int = Query(default=24, ge=1, le=168),
 ) -> dict:
     """Time-series signal throughput from TimescaleDB's time_bucket aggregation."""
-    throughput_query = """
-        SELECT time_bucket($1::interval, time) AS period,
+    # NOTE: asyncpg's binary protocol cannot encode Python strings as
+    # PostgreSQL interval types (it expects datetime.timedelta).  The
+    # ``interval`` value is already validated by FastAPI's regex pattern,
+    # so embedding it directly in the SQL is safe.
+    throughput_query = f"""
+        SELECT time_bucket('{interval}'::interval, time) AS period,
                ROUND(AVG(value))::int AS signals
         FROM metrics
         WHERE metric_name = 'signals_per_second'
-          AND time >= NOW() - ($2 || ' hours')::interval
+          AND time >= NOW() - '{hours} hours'::interval
         GROUP BY period
         ORDER BY period ASC
     """
-    incidents_query = """
-        SELECT time_bucket($1::interval, created_at) AS period,
+    incidents_query = f"""
+        SELECT time_bucket('{interval}'::interval, created_at) AS period,
                COUNT(*)::int AS incidents
         FROM work_items
-        WHERE created_at >= NOW() - ($2 || ' hours')::interval
+        WHERE created_at >= NOW() - '{hours} hours'::interval
         GROUP BY period
         ORDER BY period ASC
     """
     async with postgres.acquire() as conn:
-        tp_rows = await conn.fetch(throughput_query, interval, str(hours))
-        inc_rows = await conn.fetch(incidents_query, interval, str(hours))
+        tp_rows = await conn.fetch(throughput_query)
+        inc_rows = await conn.fetch(incidents_query)
 
     # Merge the two series by period
     inc_map = {row["period"]: row["incidents"] for row in inc_rows}

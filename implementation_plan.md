@@ -323,14 +323,14 @@ async def debounce_and_process(signal: SignalIn, redis, pg_pool, mongo_db) -> st
 
 ### Acceptance criteria
 
-- [ ] `pytest backend/tests/test_debounce.py` passes with 5+ tests:
+- [x] `pytest backend/tests/test_debounce.py` passes with 5+ tests:
   - First signal for a component → work item created, returns 'created'
   - Second signal within 10s → deduped, signal_count incremented, returns 'deduplicated'
   - Signal after 10s window expires → new work item created
   - Concurrent signals (simulated) → exactly one winner
   - signal_count matches total signals received
-- [ ] Consumer starts via `python -m app.consumer.signal_consumer` (exits if Kafka not available, logged)
-- [ ] Consumer processes a manually produced Kafka message end-to-end (integration test with docker compose)
+- [x] Consumer starts via `python -m app.consumer.signal_consumer` (exits if Kafka not available, logged)
+- [x] Consumer processes a manually produced Kafka message end-to-end (integration test with docker compose)
 
 ### Git commit
 

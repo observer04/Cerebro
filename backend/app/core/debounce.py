@@ -34,7 +34,7 @@ async def _increment_signal_count(pg_pool: Any, work_item_id: str) -> None:
 
 async def debounce_and_process(
     signal: SignalIn, redis_client: Any, pg_pool: Any, mongo_db: Any | None = None
-) -> str:
+) -> tuple[str, str]:
     from app.core.alert_strategy import COMPONENT_SEVERITY
 
     debounce_key = f"debounce:{signal.component_id}"
@@ -52,10 +52,10 @@ async def debounce_and_process(
         await execute_alert(
             SimpleNamespace(component_id=signal.component_id, title=signal.component_id)
         )
-        return "created"
+        return ("created", work_item_id)
 
     # Loser: increment the existing work item's signal count.
     existing_id = await redis_client.get(debounce_key)
     if existing_id and existing_id != placeholder:
         await _increment_signal_count(pg_pool, str(existing_id))
-    return "deduplicated"
+    return ("deduplicated", str(existing_id) if existing_id else "")

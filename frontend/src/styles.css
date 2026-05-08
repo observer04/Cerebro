@@ -373,6 +373,10 @@ body::before {
   .metrics-bar {
     grid-template-columns: 1fr;
   }
+
+  .health-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 720px) {
@@ -386,4 +390,361 @@ body::before {
     flex-wrap: wrap;
     gap: 0.75rem;
   }
+
+  .health-bar {
+    grid-template-columns: 1fr;
+  }
 }
+
+/* ─── Signal Drawer (Feature 1) ─── */
+
+.signal-drawer-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem 0;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--stroke);
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+.signal-drawer-toggle:hover {
+  opacity: 0.8;
+}
+
+.signal-expand-icon {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.signal-drawer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.signal-card {
+  background: var(--bg-2);
+  border: 1px solid var(--stroke);
+  border-radius: 0.6rem;
+  overflow: hidden;
+  animation: fadeUp 0.3s ease;
+}
+
+.signal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.signal-header:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.signal-time {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+  min-width: 70px;
+}
+
+.signal-source {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.signal-metadata {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-top: 1px solid var(--stroke);
+  background: var(--bg-1);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--muted);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ─── System Health Bar (Feature 2) ─── */
+
+.health-bar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.health-card {
+  background: var(--card);
+  padding: 1rem 1.2rem;
+  border-radius: 1rem;
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  animation: fadeUp 0.6s ease;
+}
+
+.health-card .health-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+}
+
+.health-card .health-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.health-card .health-sub {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.severity-counts {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.store-health {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.store-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.store-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+
+.store-dot.healthy { background: var(--accent-2); }
+.store-dot.degraded { background: var(--p1); }
+.store-dot.unhealthy { background: var(--p0); }
+
+/* ─── Incident Timeline (Feature 3) ─── */
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 0.55rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  background: var(--stroke);
+}
+
+.timeline-entry {
+  position: relative;
+  padding: 0.5rem 0 0.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -1.1rem;
+  top: 0.65rem;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: var(--accent-3);
+  border: 2px solid var(--card);
+  box-shadow: 0 0 0 2px var(--stroke);
+}
+
+.timeline-dot.created { background: var(--accent-2); }
+.timeline-dot.burst { background: var(--accent); }
+.timeline-dot.transition { background: var(--accent-3); }
+.timeline-dot.rca { background: var(--p2); }
+.timeline-dot.closed { background: var(--ink); }
+
+.timeline-time {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.timeline-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.timeline-detail {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.burst-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%);
+  margin-top: 0.25rem;
+  opacity: 0.7;
+}
+
+/* ─── Analytics Chart (Feature 4) ─── */
+
+.analytics-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.control-group label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-right: 0.3rem;
+}
+
+.chip {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: var(--bg-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chip:hover {
+  background: var(--bg-1);
+}
+
+.chip.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+.chart-area {
+  position: relative;
+  height: 260px;
+  margin-top: 1rem;
+}
+
+.chart-area svg {
+  width: 100%;
+  height: 100%;
+}
+
+.chart-tooltip {
+  position: absolute;
+  background: var(--ink);
+  color: #fff;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.4rem;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* ─── Component Health Table (Feature 5) ─── */
+
+.health-table-container {
+  background: var(--card);
+  border-radius: 1.2rem;
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: fadeUp 0.6s ease;
+}
+
+.health-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--stroke);
+}
+
+.health-table-header .section-title {
+  margin: 0;
+}
+
+.health-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.health-table th {
+  text-align: left;
+  padding: 0.7rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--stroke);
+  cursor: pointer;
+  user-select: none;
+}
+
+.health-table th:hover {
+  color: var(--ink);
+}
+
+.health-table td {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--stroke);
+}
+
+.health-table tr:last-child td {
+  border-bottom: none;
+}
+
+.health-table tr:hover td {
+  background: var(--bg-2);
+}
+
+.health-table tr {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+

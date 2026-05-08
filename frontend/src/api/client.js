@@ -52,5 +52,22 @@ export const api = {
   submitRca: (id, payload) =>
     request(`/work-items/${id}/rca`, { method: "POST", body: payload }),
   getDashboardActive: () => request(`/dashboard/active`),
-  getDashboardMetrics: () => request(`/dashboard/metrics`)
+  getDashboardMetrics: () => request(`/dashboard/metrics`),
+
+  // Feature 1 — Raw Signal Inspector (MongoDB)
+  getWorkItemSignals: (id, params) =>
+    request(`/work-items/${id}/signals${buildQuery(params)}`),
+
+  // Feature 3 — Incident Timeline (PostgreSQL + MongoDB)
+  getWorkItemTimeline: (id) => request(`/work-items/${id}/timeline`),
+
+  // Feature 4 — Time-Series Analytics (TimescaleDB)
+  getAnalyticsThroughput: (params) =>
+    request(`/analytics/throughput${buildQuery(params)}`),
+
+  // Feature 2 — System Health Dashboard (Redis)
+  getHealthSummary: () => request(`/system/health-summary`),
+
+  // Feature 5 — Component Health Table (Cross-Store)
+  getComponentHealth: () => request(`/analytics/component-health`),
 };

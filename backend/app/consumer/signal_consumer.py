@@ -21,13 +21,30 @@ logger = logging.getLogger(__name__)
 shutdown_event = asyncio.Event()
 
 
-async def _insert_raw_signal(mongo_db: Any, signal: SignalIn) -> None:
+async def _insert_raw_signal(mongo_db: Any, signal_in: SignalIn) -> None:
     collection = mongo_db["raw_signals"]
+    doc = signal_in.model_dump(mode="json")
+    # Ensure signal_id is stored as a string for consistent querying.
+    doc["signal_id"] = str(signal_in.signal_id)
 
     async def operation() -> None:
-        await collection.insert_one(signal.model_dump(mode="json"))
+        await collection.insert_one(doc)
 
     await async_retry(operation)
+
+
+async def _tag_signal_with_work_item(
+    mongo_db: Any, signal_id: str, work_item_id: str
+) -> None:
+    """Tag a raw signal document with the resolved work_item_id post-debounce."""
+    collection = mongo_db["raw_signals"]
+    try:
+        await collection.update_one(
+            {"signal_id": signal_id},
+            {"$set": {"work_item_id": work_item_id}},
+        )
+    except Exception:
+        logger.warning("Failed to tag signal %s with work_item_id", signal_id)
 
 
 async def _start_consumer_with_retry(
@@ -85,13 +102,25 @@ async def run() -> None:
                 signal_in = SignalIn(**payload)
                 await redis.incr(settings.throughput_counter_key)
                 await _insert_raw_signal(mongo_db, signal_in)
-                outcome = await debounce_and_process(signal_in, redis, pg_pool, mongo_db)
+                outcome, work_item_id = await debounce_and_process(
+                    signal_in, redis, pg_pool, mongo_db
+                )
+
+                # Tag the MongoDB document with the resolved work_item_id.
+                if work_item_id:
+                    await _tag_signal_with_work_item(
+                        mongo_db, str(signal_in.signal_id), work_item_id
+                    )
+
                 event_type = (
                     "incident.created" if outcome == "created" else "incident.updated"
                 )
                 event = {
                     "type": event_type,
-                    "data": {"component_id": signal_in.component_id},
+                    "data": {
+                        "component_id": signal_in.component_id,
+                        "work_item_id": work_item_id,
+                    },
                 }
                 await redis.publish("incidents", json.dumps(event))
 

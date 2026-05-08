@@ -90,9 +90,10 @@ async def test_first_signal_creates_work_item() -> None:
     redis = FakeRedis()
     pg_pool = FakePGPool()
 
-    result = await debounce_and_process(make_signal(), redis, pg_pool, None)
+    outcome, work_item_id = await debounce_and_process(make_signal(), redis, pg_pool, None)
 
-    assert result == "created"
+    assert outcome == "created"
+    assert work_item_id is not None
     assert len(pg_pool.work_items) == 1
 
 
@@ -101,12 +102,12 @@ async def test_second_signal_deduplicates_and_increments() -> None:
     redis = FakeRedis()
     pg_pool = FakePGPool()
 
-    await debounce_and_process(make_signal(), redis, pg_pool, None)
-    result = await debounce_and_process(make_signal(), redis, pg_pool, None)
+    _, first_id = await debounce_and_process(make_signal(), redis, pg_pool, None)
+    outcome, second_id = await debounce_and_process(make_signal(), redis, pg_pool, None)
 
-    assert result == "deduplicated"
-    work_item_id = await redis.get("debounce:database")
-    assert pg_pool.work_items[work_item_id]["signal_count"] == 2
+    assert outcome == "deduplicated"
+    assert second_id == first_id
+    assert pg_pool.work_items[first_id]["signal_count"] == 2
 
 
 @pytest.mark.asyncio
@@ -114,14 +115,12 @@ async def test_window_expiry_creates_new_item() -> None:
     redis = FakeRedis()
     pg_pool = FakePGPool()
 
-    await debounce_and_process(make_signal(), redis, pg_pool, None)
-    old_id = await redis.get("debounce:database")
+    _, old_id = await debounce_and_process(make_signal(), redis, pg_pool, None)
 
     redis.advance(11)
-    result = await debounce_and_process(make_signal(), redis, pg_pool, None)
-    new_id = await redis.get("debounce:database")
+    outcome, new_id = await debounce_and_process(make_signal(), redis, pg_pool, None)
 
-    assert result == "created"
+    assert outcome == "created"
     assert old_id != new_id
     assert len(pg_pool.work_items) == 2
 
@@ -136,8 +135,9 @@ async def test_concurrent_signals_single_winner() -> None:
         debounce_and_process(make_signal(), redis, pg_pool, None),
     )
 
-    assert results.count("created") == 1
-    assert results.count("deduplicated") == 1
+    outcomes = [r[0] for r in results]
+    assert outcomes.count("created") == 1
+    assert outcomes.count("deduplicated") == 1
     # Only one work item created — no orphans
     assert len(pg_pool.work_items) == 1
 
@@ -147,8 +147,9 @@ async def test_signal_count_matches_total() -> None:
     redis = FakeRedis()
     pg_pool = FakePGPool()
 
-    for _ in range(5):
+    _, work_item_id = await debounce_and_process(make_signal(), redis, pg_pool, None)
+    for _ in range(4):
         await debounce_and_process(make_signal(), redis, pg_pool, None)
 
-    work_item_id = await redis.get("debounce:database")
     assert pg_pool.work_items[work_item_id]["signal_count"] == 5
+
